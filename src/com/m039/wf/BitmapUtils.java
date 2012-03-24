@@ -1,5 +1,7 @@
 package com.m039.wf;
 
+import android.graphics.Paint;
+
 import android.graphics.Canvas;
 
 import android.graphics.Color;
@@ -20,10 +22,16 @@ public class BitmapUtils {
 	static Bitmap	createDebugImage(int width, int height) {
 		Bitmap b =  Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 
-		// Canvas c = new Canvas(b);
-		// c.drawColor(Color.GREEN);
+		Paint p = new Paint();
 
-		// maybe transparent??
+		p.setColor(Color.WHITE);
+		
+		Canvas c = new Canvas(b);
+		c.drawColor(Color.BLACK);
+
+		String text = "Loading";
+		
+		c.drawText(text, width / 2 - p.measureText(text) / 2 , height / 2, p);
 
 		return b;
 	}

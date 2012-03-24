@@ -1,5 +1,12 @@
 package com.m039.wf;
 
+import android.os.Message;
+
+import android.os.Handler;
+
+
+import android.os.Looper;
+
 import android.graphics.Color;
 
 import java.io.File;
@@ -55,6 +62,9 @@ public class DemoActivity extends Activity
 	ListView		mImages;
 	Bitmap			mDefaultBitmap;
 
+	Handler			mImageHandler = null;
+	Handler			mBackgroundImageHandler = null;
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -64,32 +74,50 @@ public class DemoActivity extends Activity
 		mImages = (ListView) findViewById(R.id.images);
 		mFiles = FileUtils.findFiles("/sdcard/Images", new String[] {"jpg"});
 
-		// new Thread() {
-		// 	public void run() {
-		// 		int count = mFiles.size();
-
-		// 		for (int i = 0; i < count; i++) {
-		// 			final ImageView iv = new ImageView(DemoActivity.this);
-
-		// 			iv.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-		// 														  ViewGroup.LayoutParams.WRAP_CONTENT));
-
-		// 			Bitmap b = decodeImage(mFiles.get(i));
-		// 			iv.setImageBitmap(b);
-
-		// 			runOnUiThread(new Runnable() {
-		// 					public void run() {
-		// 						mImages.addView(iv);
-		// 					}
-		// 				});
-		// 		}
-
-		// 	}
-		// }.start();
-
 		mImages.setAdapter(new MAdapter(this, R.layout.element, mFiles));
 
+		startImageThread();
+		startBackgroundImageThread();
+
 		log();
+	}
+
+	void startImageThread() {
+		new Thread() {
+			public void run() {
+				Looper.prepare();
+
+				mImageHandler = new Handler() {
+						public void handleMessage(Message msg) {
+							Runnable r = msg.getCallback();
+
+							if (r != null)
+								r.run();
+						}
+					};
+
+				Looper.loop();
+			}
+		}.start();
+	}
+
+	void startBackgroundImageThread() {
+		new Thread() {
+			public void run() {
+				Looper.prepare();
+
+				mBackgroundImageHandler = new Handler() {
+						public void handleMessage(Message msg) {
+							Runnable r = msg.getCallback();
+
+							if (r != null)
+								r.run();
+						}
+					};
+
+				Looper.loop();
+			}
+		}.start();
 	}
 
 	static File ROOT = new File("/sdcard/ImageCache");
@@ -130,22 +158,35 @@ public class DemoActivity extends Activity
 
 			final ImageView image = iv;
 
-			Thread t = (Thread) image.getTag();
-			if (t != null)
-				t.interrupt();
+			image.setTag(position);
 
-
-			final File bfile = mFiles.get(position);			
+			final File bfile = mFiles.get(position);
 			final File cache = new File(ROOT, bfile.getName());
 
 			if (cache.exists()) {
-				Bitmap b;
+				mImageHandler.post(new Runnable() {
+						public void run() {
+							final Bitmap b;
 
-				b = BitmapFactory.decodeFile(cache.getAbsolutePath());
+							b = BitmapFactory.decodeFile(cache.getAbsolutePath());
 
-				image.setImageBitmap(b);
+							runOnUiThread(new Runnable() {
+									public void run() {
+										Integer pos = (Integer) image.getTag();
+
+										if (pos != null && pos != position) {
+											image.setImageBitmap(mDefaultBitmap);
+										} else {
+											image.setImageBitmap(b);
+										}
+									}
+								});
+						}
+					});
 			} else {
-				t = new Thread() {
+				image.setImageBitmap(mDefaultBitmap);
+
+				mBackgroundImageHandler.post(new Runnable() {
 						public void run() {
 							final Bitmap b;
 
@@ -163,43 +204,27 @@ public class DemoActivity extends Activity
 								b = scaled;
 							}
 
-							if (interrupted()) {
-								runOnUiThread(new Runnable() {
-										public void run() {
-											image.setImageBitmap(mDefaultBitmap);
-										}
-									});
+							mImageHandler.post(new Runnable() {
+									public void run() {
+										Integer pos = (Integer) image.getTag();
 
-								Log.d(TAG, " interrupt [2]");
-							} else {
-								runOnUiThread(new Runnable() {
-										public void run() {
-											image.setImageBitmap(b);
-										}
-									});
-							}
+										if (pos != null && pos != position)
+											return;
+
+										runOnUiThread(new Runnable() {
+												public void run() {
+													image.setImageBitmap(b);
+												}
+											});
+									}
+								});
 
 							if (!cache.exists()) {
 								BitmapUtils.saveBitmap(b, cache);
 							}
 						}
-					};
+					});
 
-				iv.setTag(t);
-
-				// add thread to pool
-				Thread prev = mThreads[mIndex];
-				if (prev != null)
-					prev.interrupt();
-
-				mThreads[mIndex] = t;
-
-				mIndex++;
-
-				if (mIndex >= COUNT)
-					mIndex = 0;
-
-				t.start();
 			}
 
 			return iv;
