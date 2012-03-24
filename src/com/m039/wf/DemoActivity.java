@@ -1,5 +1,9 @@
 package com.m039.wf;
 
+import android.graphics.Color;
+
+import java.io.File;
+
 import java.io.ByteArrayOutputStream;
 
 import java.io.FileInputStream;
@@ -59,7 +63,6 @@ public class DemoActivity extends Activity
 
 		mImages = (ListView) findViewById(R.id.images);
 		mFiles = FileUtils.findFiles("/sdcard/Images", new String[] {"jpg"});
-		mDefaultBitmap = decodeImage(mFiles.get(0));
 
 		// new Thread() {
 		// 	public void run() {
@@ -89,8 +92,17 @@ public class DemoActivity extends Activity
 		log();
 	}
 
-	class MAdapter extends ArrayAdapter<File> {
+	static File ROOT = new File("/sdcard/ImageCache");
 
+	static {
+		if (ROOT.exists()) {
+			FileUtils.delete(ROOT);
+		}
+
+		ROOT.mkdir();
+	}
+
+	class MAdapter extends ArrayAdapter<File> {
 		int		COUNT		= 4;
 		int		mIndex		= 0;
 		Thread	mThreads[]  = new Thread[COUNT];
@@ -102,11 +114,16 @@ public class DemoActivity extends Activity
 		public View 	getView(final int position,
 								View convertView,
 								final ViewGroup parent) {
+
+			if (mDefaultBitmap == null) {
+				mDefaultBitmap = BitmapUtils.createDebugImage(parent.getWidth(), parent.getHeight());
+			}
+
 			ImageView iv;
 
 			if (convertView == null) {
 				iv = new ImageView(DemoActivity.this);
-				iv.setImageBitmap(mDefaultBitmap);
+				iv.setImageBitmap(mDefaultBitmap); // necessary to set!
 			} else {
 				iv = (ImageView) convertView;
 			}
@@ -117,98 +134,76 @@ public class DemoActivity extends Activity
 			if (t != null)
 				t.interrupt();
 
-			t = new Thread() {
-					public void run() {
-						// File file = mFiles.get(position);
 
-						// byte[] data = null;
+			final File bfile = mFiles.get(position);			
+			final File cache = new File(ROOT, bfile.getName());
 
-						// try {
-						// 	byte[] buffer = new byte[4096];
+			if (cache.exists()) {
+				Bitmap b;
 
-						// 	InputStream in = new BufferedInputStream(new FileInputStream(file));
-						// 	ByteArrayOutputStream out = new ByteArrayOutputStream();
+				b = BitmapFactory.decodeFile(cache.getAbsolutePath());
 
-						// 	int number = 0;
+				image.setImageBitmap(b);
+			} else {
+				t = new Thread() {
+						public void run() {
+							final Bitmap b;
 
-						// 	while ( (number = in.read(buffer)) != -1) {
-						// 		out.write(buffer, 0, buffer.length);
+							if (cache.exists()) {
+								b = BitmapFactory.decodeFile(cache.getAbsolutePath());
+							} else {
+								Bitmap bmp = BitmapUtils.decodeBitmap(bfile,
+																	  parent.getWidth(), parent.getHeight());
 
-						// 		if (interrupted()) {
-						// 			Log.d(TAG, " interrupt [1]");
-						// 			return;
-						// 		}
-						// 	}
+								Bitmap scaled = BitmapUtils.createProportionalScaleBitmap(bmp,
+																						  parent.getWidth(),
+																						  parent.getHeight());
 
-						// 	data = out.toByteArray();
+								bmp.recycle();
+								b = scaled;
+							}
 
-						// } catch (Exception e) {
-						// }
+							if (interrupted()) {
+								runOnUiThread(new Runnable() {
+										public void run() {
+											image.setImageBitmap(mDefaultBitmap);
+										}
+									});
 
-						// if (data == null)
-						// 	return;
+								Log.d(TAG, " interrupt [2]");
+							} else {
+								runOnUiThread(new Runnable() {
+										public void run() {
+											image.setImageBitmap(b);
+										}
+									});
+							}
 
-						BitmapFactory.Options options = new BitmapFactory.Options();
-
-						options.inSampleSize = 8;
-
-						// final Bitmap b = BitmapFactory.decodeByteArray(data, 0, data.length, options);
-
-						Bitmap bmp = BitmapUtils.decodeBitmap(mFiles.get(position),
-															  parent.getWidth(), parent.getHeight());
-
-						Bitmap scaled = BitmapUtils.createProportionalScaleBitmap(bmp,
-																				  parent.getWidth(),
-																				  parent.getHeight());
-
-						final Bitmap b = scaled;
-
-						if (interrupted()) {
-							Log.d(TAG, " interrupt [2]");
-							return;
+							if (!cache.exists()) {
+								BitmapUtils.saveBitmap(b, cache);
+							}
 						}
+					};
 
-						runOnUiThread(new Runnable() {
-								public void run() {
-									image.setImageBitmap(b);
-								}
-							});
+				iv.setTag(t);
 
-						// the end
-						bmp.recycle();						
-					}
-				};
+				// add thread to pool
+				Thread prev = mThreads[mIndex];
+				if (prev != null)
+					prev.interrupt();
 
-			iv.setTag(t);
+				mThreads[mIndex] = t;
 
-			// add thread to pool
-			Thread prev = mThreads[mIndex];
-			if (prev != null)
-				prev.interrupt();
+				mIndex++;
 
-			mThreads[mIndex] = t;
+				if (mIndex >= COUNT)
+					mIndex = 0;
 
-			mIndex++;
-
-			if (mIndex >= COUNT)
-				mIndex = 0;
-
-			t.start();
+				t.start();
+			}
 
 			return iv;
 		}
-	}
-
-	/**
-	 * @param file is path to the image
-	 */
-	Bitmap decodeImage(File file) {
-		BitmapFactory.Options options = new BitmapFactory.Options();
-
-		options.inSampleSize = 1;
-
-		Bitmap b = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
-		return b;
 	}
 
 	void log() {

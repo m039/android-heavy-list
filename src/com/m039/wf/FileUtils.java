@@ -90,4 +90,16 @@ public class FileUtils
 
 		return sb.toString();
 	}
+
+	/**
+	 * Taken from SO
+	 */   
+	static void delete(File fileOrDirectory) {
+		if (fileOrDirectory.isDirectory())
+			for (File child : fileOrDirectory.listFiles())
+				delete(child);
+
+		fileOrDirectory.delete();
+	}
+	
 }

@@ -1,5 +1,9 @@
 package com.m039.wf;
 
+import android.graphics.Canvas;
+
+import android.graphics.Color;
+
 import android.util.Log;
 
 import java.io.FileOutputStream;
@@ -12,6 +16,17 @@ import android.graphics.Bitmap;
 
 public class BitmapUtils {
 	private static final String TAG = "m039";
+
+	static Bitmap	createDebugImage(int width, int height) {
+		Bitmap b =  Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+
+		// Canvas c = new Canvas(b);
+		// c.drawColor(Color.GREEN);
+
+		// maybe transparent??
+
+		return b;
+	}
 	
 	static BitmapFactory.Options decodeBitmapBounds(File file) {
 		BitmapFactory.Options options = new BitmapFactory.Options();
@@ -90,7 +105,7 @@ public class BitmapUtils {
 	static void saveBitmap(Bitmap src, File location) {
 		try {
 			FileOutputStream out = new FileOutputStream(location);
-			src.compress(Bitmap.CompressFormat.PNG, 90, out);
+			src.compress(Bitmap.CompressFormat.JPEG, 70, out);
 		} catch (Exception e) {
 			Log.e(TAG, "saveBitmap", e);
 		}
