@@ -5,8 +5,9 @@
 * Details
   I'm using 2 threads for handling large images.
 
-  first - to get an image from folder and create cache
-  second - to set this image in the image-view
+  /first/ - to get an image from folder and create cache
+  
+  /second/ - to set this image in the image-view
   
 * License
   This code is licensed under the terms of the Apache 2.0 license as
