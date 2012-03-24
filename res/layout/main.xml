@@ -5,19 +5,10 @@
 			  android:layout_height="fill_parent"
 			  >
 
-  <ScrollView
+  <ListView
+	  android:id="@+id/images"
 	  android:layout_width="match_parent"
 	  android:layout_height="match_parent"
-	  >
-
-	<LinearLayout
-		android:id="@+id/images"
-		android:orientation="vertical"
-		android:layout_width="match_parent"
-		android:layout_height="match_parent"		
-		/>
-	
-  </ScrollView>
-
+	  />
 
 </LinearLayout>
