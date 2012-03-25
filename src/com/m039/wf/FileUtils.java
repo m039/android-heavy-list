@@ -16,7 +16,7 @@ public class FileUtils
 
         if (!file.isDirectory())
             return null;
-        
+
         final FilenameFilter extf, dirf;
 
         extf = new FilenameFilter() {
@@ -53,7 +53,7 @@ public class FileUtils
                 for (File d : root.listFiles(dirf)) {
                     add(d);
                 }
-            }           
+            }
         }.run();
 
         return res;
@@ -80,7 +80,7 @@ public class FileUtils
 
     /**
      * Taken from SO
-     */   
+     */
     static void delete(File fileOrDirectory) {
         if (fileOrDirectory.isDirectory())
             for (File child : fileOrDirectory.listFiles())
@@ -88,5 +88,5 @@ public class FileUtils
 
         fileOrDirectory.delete();
     }
-    
+
 }
