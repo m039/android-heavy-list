@@ -19,7 +19,7 @@ public class CacheUtils {
 		ROOT.mkdir();
 	}
 
-	static void clear() {
+	static void		clear() {
 		if (ROOT.exists()) {
 			FileUtils.delete(ROOT);
 		}
@@ -27,15 +27,15 @@ public class CacheUtils {
 		ROOT.mkdir();
 	}
 
-	static File find(String name) {
+	static File		find(String name) {
 		return new File(ROOT, name);
 	}
 
-	static Bitmap get(File cache) {
+	static Bitmap	get(File cache) {
 		return BitmapFactory.decodeFile(cache.getAbsolutePath());
 	}
 
-	static void	put(Bitmap b, File cache) {
+	static void		put(Bitmap b, File cache) {
 		BitmapUtils.saveBitmap(b, cache);
 	}
 }
