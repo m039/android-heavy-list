@@ -68,10 +68,20 @@ public class DemoActivity extends Activity
 
 		initButtons();
 		
-		startImageThread();
-		startBackgroundImageThread();
-
 		log();
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+
+		startThreads();
+	}
+
+	public void onPause() {
+		super.onPause();
+
+		stopThreads();
 	}
 
 	void initButtons() {
@@ -88,6 +98,11 @@ public class DemoActivity extends Activity
 						((ArrayAdapter) mImages.getAdapter()).notifyDataSetChanged();
 					}
 				});
+	}
+
+	void startThreads() {
+		startImageThread();
+		startBackgroundImageThread();
 	}
 
 	void startImageThread() {
@@ -128,6 +143,16 @@ public class DemoActivity extends Activity
 		}.start();
 	}
 
+	void stopThreads() {
+		if (mImageHandler != null) {
+			mImageHandler.getLooper().quit();
+		}
+
+		if (mBackgroundImageHandler != null) {
+			mBackgroundImageHandler.getLooper().quit();
+		}			
+	}
+
 	class MAdapter extends ArrayAdapter<File> {
 		MAdapter(Context c, int r, List<File> obj) {
 			super(c, r, obj);
@@ -150,81 +175,84 @@ public class DemoActivity extends Activity
 				iv = (ImageView) convertView;
 			}
 
-			final ImageView image = iv;
+			if (mImageHandler != null && mBackgroundImageHandler != null) {
+				final ImageView image = iv;
 
-			image.setTag(position);
+				image.setTag(position);
 
-			final File bfile = mFiles.get(position);
-			final File cache = new File(ROOT, bfile.getName());
+				final File bfile = mFiles.get(position);
+				final File cache = new File(ROOT, bfile.getName());
 
-			if (cache.exists()) {
-				mImageHandler.post(new Runnable() {
-						public void run() {
-							final Bitmap b;
+				if (cache.exists()) {
+					mImageHandler.post(new Runnable() {
+							public void run() {
+								final Bitmap b;
 
-							b = BitmapFactory.decodeFile(cache.getAbsolutePath());
-
-							runOnUiThread(new Runnable() {
-									public void run() {
-										Integer pos = (Integer) image.getTag();
-
-										if (pos != null && pos != position) {
-											image.setImageBitmap(mDefaultBitmap);
-											b.recycle();
-										} else {
-											image.setImageBitmap(b);
-										}
-									}
-								});
-						}
-					});
-			} else {
-				image.setImageBitmap(mDefaultBitmap);
-
-				mBackgroundImageHandler.post(new Runnable() {
-						public void run() {
-							final Bitmap b;
-
-							if (cache.exists()) {
 								b = BitmapFactory.decodeFile(cache.getAbsolutePath());
-							} else {
-								Bitmap bmp = BitmapUtils.decodeBitmap(bfile,
-																	  parent.getWidth(), parent.getHeight());
 
-								Bitmap scaled = BitmapUtils.createProportionalScaleBitmap(bmp,
-																						  parent.getWidth(),
-																						  parent.getHeight());
+								runOnUiThread(new Runnable() {
+										public void run() {
+											Integer pos = (Integer) image.getTag();
 
-								bmp.recycle();
-								b = scaled;
-							}
-
-							Integer pos = (Integer) image.getTag();
-							
-							if (pos != null && pos != position) {
-								if (!cache.exists()) {
-									BitmapUtils.saveBitmap(b, cache);
-								}
-
-								b.recycle();
-								
-							} else {
-								mImageHandler.post(new Runnable() {
-										public void run() {								
-											runOnUiThread(new Runnable() {
-													public void run() {
-														image.setImageBitmap(b);
-													}
-												});
+											if (pos != null && pos != position) {
+												image.setImageBitmap(mDefaultBitmap);
+												b.recycle();
+											} else {
+												image.setImageBitmap(b);
+											}
 										}
 									});
-
-								if (!cache.exists()) {
-									BitmapUtils.saveBitmap(b, cache);
-								}								
 							}
-						}
-					});
+						});
+				} else {
+					image.setImageBitmap(mDefaultBitmap);
+
+					mBackgroundImageHandler.post(new Runnable() {
+							public void run() {
+								final Bitmap b;
+
+								if (cache.exists()) {
+									b = BitmapFactory.decodeFile(cache.getAbsolutePath());
+								} else {
+									Bitmap bmp = BitmapUtils.decodeBitmap(bfile,
+																		  parent.getWidth(),
+																		  parent.getHeight());
+
+									Bitmap scaled = BitmapUtils.createProportionalScaleBitmap(bmp,
+																							  parent.getWidth(),
+																							  parent.getHeight());
+
+									bmp.recycle();
+									b = scaled;
+								}
+
+								Integer pos = (Integer) image.getTag();
+							
+								if (pos != null && pos != position) {
+									if (!cache.exists()) {
+										BitmapUtils.saveBitmap(b, cache);
+									}
+
+									b.recycle();
+								
+								} else {
+									mImageHandler.post(new Runnable() {
+											public void run() {								
+												runOnUiThread(new Runnable() {
+														public void run() {
+															image.setImageBitmap(b);
+														}
+													});
+											}
+										});
+
+									if (!cache.exists()) {
+										BitmapUtils.saveBitmap(b, cache);
+									}								
+								}
+							}
+						});
+				}
 			}
 
 			return iv;
