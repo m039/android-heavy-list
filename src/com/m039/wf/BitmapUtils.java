@@ -11,10 +11,17 @@ import android.util.Log;
 import java.io.FileOutputStream;
 import java.io.File;
 
+/**
+* Created: 25 March 2012
+*
+* @author <a href="mailto:flam44@gmail.com">Mozgin Dmitry</a>
+* @version 1.0
+*/
+
 public class BitmapUtils {
     private static final String TAG = "m039";
 
-    static Bitmap   createDebugImage(int width, int height) {
+    static Bitmap   createDebugImage(String text, int width, int height) {
         Bitmap b =  Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 
         Paint p = new Paint();
@@ -24,12 +31,10 @@ public class BitmapUtils {
         Canvas c = new Canvas(b);
         c.drawColor(Color.BLACK);
 
-        String text = "Loading";
-
         c.drawText(text, width / 2 - p.measureText(text) / 2 , height / 2, p);
 
         return b;
-    }
+    }   
 
     static BitmapFactory.Options decodeBitmapBounds(File file) {
         BitmapFactory.Options options = new BitmapFactory.Options();

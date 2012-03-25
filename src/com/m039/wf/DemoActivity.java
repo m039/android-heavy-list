@@ -1,3 +1,19 @@
+/*
+* Copyright (C) 2012 Mozgin Dmitry
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
 package com.m039.wf;
 
 import java.util.List;
@@ -37,6 +53,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Bundle;
 
+/**
+* Created: 25 March 2012
+*
+* @author <a href="mailto:flam44@gmail.com">Mozgin Dmitry</a>
+* @version 1.0
+*/
 
 public class DemoActivity extends Activity
 {
@@ -44,7 +66,9 @@ public class DemoActivity extends Activity
 
     List<File>      mFiles;
     ListView        mImages;
+
     Bitmap          mDefaultBitmap;
+    Bitmap          mDefaultSkippingBitmap;
 
     Handler         mImageHandler = null;
     Handler         mBackgroundImageHandler = null;
@@ -166,9 +190,7 @@ public class DemoActivity extends Activity
                                 View convertView,
                                 final ViewGroup parent) {
 
-            if (mDefaultBitmap == null) {
-                mDefaultBitmap = BitmapUtils.createDebugImage(parent.getWidth(), parent.getHeight());
-            }
+            initDefaultImages(parent.getWidth(), parent.getHeight());
 
             ImageView iv;
 
@@ -199,7 +221,7 @@ public class DemoActivity extends Activity
                                             Integer pos = (Integer) image.getTag();
 
                                             if (pos != null && pos != position) {
-                                                image.setImageBitmap(mDefaultBitmap);
+                                                image.setImageBitmap(mDefaultSkippingBitmap);
                                                 b.recycle();
                                             } else {
                                                 image.setImageBitmap(b);
@@ -285,6 +307,16 @@ public class DemoActivity extends Activity
             }
 
             return iv;
+        }
+
+        void initDefaultImages(int width, int height) {
+            if (mDefaultBitmap == null) {
+                mDefaultBitmap = BitmapUtils.createDebugImage("Loading", width, height);
+            }
+
+            if (mDefaultSkippingBitmap == null) {
+                mDefaultSkippingBitmap = BitmapUtils.createDebugImage("Skipping", width, height);
+            }
         }
     }
 

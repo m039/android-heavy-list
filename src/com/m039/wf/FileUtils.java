@@ -9,6 +9,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+* Created: 25 March 2012
+*
+* @author <a href="mailto:flam44@gmail.com">Mozgin Dmitry</a>
+* @version 1.0
+*/
+
 public class FileUtils
 {
     static List<File>       findFiles(String root, final String[] extensions) {
