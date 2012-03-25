@@ -1,9 +1,5 @@
 package com.m039.wf;
 
-import android.view.Window;
-
-import android.widget.Button;
-
 import java.util.List;
 
 import java.io.File;
@@ -16,9 +12,11 @@ import java.io.InputStream;
 
 import android.content.Context;
 
+import android.view.Window;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.Button;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
@@ -113,8 +111,10 @@ public class DemoActivity extends Activity
 						public void handleMessage(Message msg) {
 							Runnable r = msg.getCallback();
 
-							if (r != null)
-								r.run();
+							if (r == null)
+								return;
+							
+							r.run();
 						}
 					};
 
@@ -215,18 +215,9 @@ public class DemoActivity extends Activity
 								startProgress();
 
 								if (cache.exists()) {
-									b = BitmapFactory.decodeFile(cache.getAbsolutePath());
+									b = CacheUtils.get(cache);
 								} else {
-									Bitmap bmp = BitmapUtils.decodeBitmap(bfile,
-																		  parent.getWidth(),
-																		  parent.getHeight());
-
-									Bitmap scaled = BitmapUtils.createProportionalScaleBitmap(bmp,
-																							  parent.getWidth(),
-																							  parent.getHeight());
-
-									bmp.recycle();
-									b = scaled;
+									b = createBitmap();
 								}
 
 								Integer pos = (Integer) image.getTag();
@@ -257,7 +248,21 @@ public class DemoActivity extends Activity
 								stopProgress();
 							}
 
-							void startProgress() {
+							Bitmap	createBitmap() {
+								Bitmap bmp = BitmapUtils.decodeBitmap(bfile,
+																	  parent.getWidth(),
+																	  parent.getHeight());
+
+								Bitmap scaled = BitmapUtils.createProportionalScaleBitmap(bmp,
+																						  parent.getWidth(),
+																						  parent.getHeight());
+
+								bmp.recycle();
+
+								return scaled;
+							}
+
+							void	startProgress() {
 								runOnUiThread(new Runnable() {
 										public void run() {
 											setProgressBarIndeterminateVisibility(true);
@@ -265,7 +270,7 @@ public class DemoActivity extends Activity
 									});
 							}
 
-							void stopProgress() {
+							void	stopProgress() {
 								runOnUiThread(new Runnable() {
 										public void run() {
 											setProgressBarIndeterminateVisibility(false);

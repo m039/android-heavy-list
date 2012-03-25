@@ -1,6 +1,7 @@
 package com.m039.wf;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -28,6 +29,10 @@ public class CacheUtils {
 
 	static File find(String name) {
 		return new File(ROOT, name);
+	}
+
+	static Bitmap get(File cache) {
+		return BitmapFactory.decodeFile(cache.getAbsolutePath());
 	}
 
 	static void	put(Bitmap b, File cache) {
