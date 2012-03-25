@@ -1,5 +1,7 @@
 package com.m039.wf;
 
+import android.view.Window;
+
 import android.widget.Button;
 
 import java.util.List;
@@ -49,16 +51,19 @@ public class DemoActivity extends Activity
 	Handler			mImageHandler = null;
 	Handler			mBackgroundImageHandler = null;
 
-	static File ROOT = new File("/sdcard/ImageCache");	
+	static File ROOT = new File("/sdcard/ImageCache");
 
 	static {
 		ROOT.mkdir();
-	}	
-	
+	}
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		initProgress();
+
 		setContentView(R.layout.main);
 
 		mImages = (ListView) findViewById(R.id.images);
@@ -67,7 +72,7 @@ public class DemoActivity extends Activity
 		mImages.setAdapter(new MAdapter(this, R.layout.element, mFiles));
 
 		initButtons();
-		
+
 		log();
 	}
 
@@ -82,6 +87,10 @@ public class DemoActivity extends Activity
 		super.onPause();
 
 		stopThreads();
+	}
+
+	void initProgress() {
+		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 	}
 
 	void initButtons() {
@@ -133,8 +142,10 @@ public class DemoActivity extends Activity
 						public void handleMessage(Message msg) {
 							Runnable r = msg.getCallback();
 
-							if (r != null)
-								r.run();
+							if (r == null)
+								return;
+
+							r.run();
 						}
 					};
 
@@ -150,7 +161,7 @@ public class DemoActivity extends Activity
 
 		if (mBackgroundImageHandler != null) {
 			mBackgroundImageHandler.getLooper().quit();
-		}			
+		}
 	}
 
 	class MAdapter extends ArrayAdapter<File> {
@@ -211,6 +222,8 @@ public class DemoActivity extends Activity
 							public void run() {
 								final Bitmap b;
 
+								startProgress();
+
 								if (cache.exists()) {
 									b = BitmapFactory.decodeFile(cache.getAbsolutePath());
 								} else {
@@ -227,17 +240,17 @@ public class DemoActivity extends Activity
 								}
 
 								Integer pos = (Integer) image.getTag();
-							
+
 								if (pos != null && pos != position) {
 									if (!cache.exists()) {
 										BitmapUtils.saveBitmap(b, cache);
 									}
 
 									b.recycle();
-								
+
 								} else {
 									mImageHandler.post(new Runnable() {
-											public void run() {								
+											public void run() {
 												runOnUiThread(new Runnable() {
 														public void run() {
 															image.setImageBitmap(b);
@@ -248,8 +261,26 @@ public class DemoActivity extends Activity
 
 									if (!cache.exists()) {
 										BitmapUtils.saveBitmap(b, cache);
-									}								
+									}
 								}
+
+								stopProgress();
+							}
+
+							void startProgress() {
+								runOnUiThread(new Runnable() {
+										public void run() {
+											setProgressBarIndeterminateVisibility(true);
+										}
+									});
+							}
+
+							void stopProgress() {
+								runOnUiThread(new Runnable() {
+										public void run() {
+											setProgressBarIndeterminateVisibility(false);
+										}
+									});
 							}
 						});
 				}
