@@ -40,256 +40,259 @@ import android.os.Bundle;
 
 public class DemoActivity extends Activity
 {
-    private static final String TAG = "m039";
+	private static final String TAG = "m039";
 
-    List<File>      mFiles;
-    ListView        mImages;
-    Bitmap          mDefaultBitmap;
+	List<File>      mFiles;
+	ListView        mImages;
+	Bitmap          mDefaultBitmap;
 
-    Handler         mImageHandler = null;
-    Handler         mBackgroundImageHandler = null;
+	Handler         mImageHandler = null;
+	Handler         mBackgroundImageHandler = null;
 
-    /** Called when the activity is first created. */
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+	/** Called when the activity is first created. */
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-        initProgress();
+		initProgress();
 
-        setContentView(R.layout.main);
+		setContentView(R.layout.main);
 
-        mImages = (ListView) findViewById(R.id.images);
-        mFiles = FileUtils.findFiles("/sdcard/Images", new String[] {"jpg"});
+		mImages = (ListView) findViewById(R.id.images);
+		mFiles = FileUtils.findFiles("/sdcard/Images", new String[] {"jpg"});
 
-        mImages.setAdapter(new MAdapter(this, R.layout.element, mFiles));
+		mImages.setAdapter(new MAdapter(this, R.layout.element, mFiles));
 
-        initButtons();
+		initButtons();
 
-        log();
-    }
+		log();
+	}
 
-    @Override
-    public void onResume() {
-        super.onResume();
+	@Override
+	protected void onResume() {
+		super.onResume();
 
-        startThreads();
-    }
+		startThreads();
 
-    public void onPause() {
-        super.onPause();
+		((ArrayAdapter) mImages.getAdapter()).notifyDataSetChanged();
+	}
 
-        stopThreads();
-    }
+	@Override
+	protected void onPause() {
+		super.onPause();
 
-    void initProgress() {
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-    }
+		stopThreads();
+	}
 
-    void initButtons() {
-        Button b = (Button) findViewById(R.id.clear_cache);
-        if (b != null)
-            b.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View v) {
-                        CacheUtils.clear();
+	void initProgress() {
+		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+	}
 
-                        ((ArrayAdapter) mImages.getAdapter()).notifyDataSetChanged();
-                    }
-                });
-    }
+	void initButtons() {
+		Button b = (Button) findViewById(R.id.clear_cache);
+		if (b != null)
+			b.setOnClickListener(new View.OnClickListener() {
+					public void onClick(View v) {
+						CacheUtils.clear();
 
-    void startThreads() {
-        startImageThread();
-        startBackgroundImageThread();
-    }
+						((ArrayAdapter) mImages.getAdapter()).notifyDataSetChanged();
+					}
+				});
+	}
 
-    void startImageThread() {
-        new Thread() {
-            public void run() {
-                Looper.prepare();
+	void startThreads() {
+		startImageThread();
+		startBackgroundImageThread();
+	}
 
-                mImageHandler = new Handler() {
-                        public void handleMessage(Message msg) {
-                            Runnable r = msg.getCallback();
+	void startImageThread() {
+		new Thread() {
+			public void run() {
+				Looper.prepare();
 
-                            if (r == null)
-                                return;
-                            
-                            r.run();
-                        }
-                    };
+				mImageHandler = new Handler() {
+						public void handleMessage(Message msg) {
+							Runnable r = msg.getCallback();
 
-                Looper.loop();
-            }
-        }.start();
-    }
+							if (r == null)
+								return;
 
-    void startBackgroundImageThread() {
-        new Thread() {
-            public void run() {
-                Looper.prepare();
+							r.run();
+						}
+					};
 
-                mBackgroundImageHandler = new Handler() {
-                        public void handleMessage(Message msg) {
-                            Runnable r = msg.getCallback();
+				Looper.loop();
+			}
+		}.start();
+	}
 
-                            if (r == null)
-                                return;
+	void startBackgroundImageThread() {
+		new Thread() {
+			public void run() {
+				Looper.prepare();
 
-                            r.run();
-                        }
-                    };
+				mBackgroundImageHandler = new Handler() {
+						public void handleMessage(Message msg) {
+							Runnable r = msg.getCallback();
 
-                Looper.loop();
-            }
-        }.start();
-    }
+							if (r == null)
+								return;
 
-    void stopThreads() {
-        if (mImageHandler != null) {
-            mImageHandler.getLooper().quit();
-        }
+							r.run();
+						}
+					};
 
-        if (mBackgroundImageHandler != null) {
-            mBackgroundImageHandler.getLooper().quit();
-        }
-    }
+				Looper.loop();
+			}
+		}.start();
+	}
 
-    class MAdapter extends ArrayAdapter<File> {
-        MAdapter(Context c, int r, List<File> obj) {
-            super(c, r, obj);
-        }
+	void stopThreads() {
+		if (mImageHandler != null) {
+			mImageHandler.getLooper().quit();
+		}
 
-        public View     getView(final int position,
-                                View convertView,
-                                final ViewGroup parent) {
+		if (mBackgroundImageHandler != null) {
+			mBackgroundImageHandler.getLooper().quit();
+		}
+	}
 
-            if (mDefaultBitmap == null) {
-                mDefaultBitmap = BitmapUtils.createDebugImage(parent.getWidth(), parent.getHeight());
-            }
+	class MAdapter extends ArrayAdapter<File> {
+		MAdapter(Context c, int r, List<File> obj) {
+			super(c, r, obj);
+		}
 
-            ImageView iv;
+		public View     getView(final int position,
+								View convertView,
+								final ViewGroup parent) {
 
-            if (convertView == null) {
-                iv = new ImageView(DemoActivity.this);
-                iv.setImageBitmap(mDefaultBitmap); // necessary to set!
-            } else {
-                iv = (ImageView) convertView;
-            }
+			if (mDefaultBitmap == null) {
+				mDefaultBitmap = BitmapUtils.createDebugImage(parent.getWidth(), parent.getHeight());
+			}
 
-            if (mImageHandler != null && mBackgroundImageHandler != null) {
-                final ImageView image = iv;
+			ImageView iv;
 
-                image.setTag(position);
+			if (convertView == null) {
+				iv = new ImageView(DemoActivity.this);
+				iv.setImageBitmap(mDefaultBitmap); // necessary to set!
+			} else {
+				iv = (ImageView) convertView;
+			}
 
-                final File bfile = mFiles.get(position);
-                final File cache = CacheUtils.find(bfile.getName());
+			if (mImageHandler != null && mBackgroundImageHandler != null) {
+				final ImageView image = iv;
 
-                if (cache.exists()) {
-                    mImageHandler.post(new Runnable() {
-                            public void run() {
-                                final Bitmap b;
+				image.setTag(position);
 
-                                b = BitmapFactory.decodeFile(cache.getAbsolutePath());
+				final File bfile = mFiles.get(position);
+				final File cache = CacheUtils.find(bfile.getName());
 
-                                runOnUiThread(new Runnable() {
-                                        public void run() {
-                                            Integer pos = (Integer) image.getTag();
+				if (cache.exists()) {
+					mImageHandler.post(new Runnable() {
+							public void run() {
+								final Bitmap b;
 
-                                            if (pos != null && pos != position) {
-                                                image.setImageBitmap(mDefaultBitmap);
-                                                b.recycle();
-                                            } else {
-                                                image.setImageBitmap(b);
-                                            }
-                                        }
-                                    });
-                            }
-                        });
-                } else {
-                    image.setImageBitmap(mDefaultBitmap);
+								b = BitmapFactory.decodeFile(cache.getAbsolutePath());
 
-                    mBackgroundImageHandler.post(new Runnable() {
-                            public void run() {
-                                final Bitmap b;
+								runOnUiThread(new Runnable() {
+										public void run() {
+											Integer pos = (Integer) image.getTag();
 
-                                startProgress();
+											if (pos != null && pos != position) {
+												image.setImageBitmap(mDefaultBitmap);
+												b.recycle();
+											} else {
+												image.setImageBitmap(b);
+											}
+										}
+									});
+							}
+						});
+				} else {
+					image.setImageBitmap(mDefaultBitmap);
 
-                                if (cache.exists()) {
-                                    b = CacheUtils.get(cache);
-                                } else {
-                                    b = createBitmap();
-                                }
+					mBackgroundImageHandler.post(new Runnable() {
+							public void run() {
+								final Bitmap b;
 
-                                Integer pos = (Integer) image.getTag();
+								startProgress();
 
-                                if (pos != null && pos != position) {
-                                    if (!cache.exists()) {
-                                        CacheUtils.put(b, cache);
-                                    }
+								if (cache.exists()) {
+									b = CacheUtils.get(cache);
+								} else {
+									b = createBitmap();
+								}
 
-                                    b.recycle();
+								Integer pos = (Integer) image.getTag();
 
-                                } else {
-                                    mImageHandler.post(new Runnable() {
-                                            public void run() {
-                                                runOnUiThread(new Runnable() {
-                                                        public void run() {
-                                                            image.setImageBitmap(b);
-                                                        }
-                                                    });
-                                            }
-                                        });
+								if (pos != null && pos != position) {
+									if (!cache.exists()) {
+										CacheUtils.put(b, cache);
+									}
 
-                                    if (!cache.exists()) {
-                                        CacheUtils.put(b, cache);
-                                    }
-                                }
+									b.recycle();
 
-                                stopProgress();
-                            }
+								} else {
+									mImageHandler.post(new Runnable() {
+											public void run() {
+												runOnUiThread(new Runnable() {
+														public void run() {
+															image.setImageBitmap(b);
+														}
+													});
+											}
+										});
 
-                            Bitmap  createBitmap() {
-                                Bitmap bmp = BitmapUtils.decodeBitmap(bfile,
-                                                                      parent.getWidth(),
-                                                                      parent.getHeight());
+									if (!cache.exists()) {
+										CacheUtils.put(b, cache);
+									}
+								}
 
-                                Bitmap scaled = BitmapUtils.createProportionalScaleBitmap(bmp,
-                                                                                          parent.getWidth(),
-                                                                                          parent.getHeight());
+								stopProgress();
+							}
 
-                                bmp.recycle();
+							Bitmap  createBitmap() {
+								Bitmap bmp = BitmapUtils.decodeBitmap(bfile,
+																	  parent.getWidth(),
+																	  parent.getHeight());
 
-                                return scaled;
-                            }
+								Bitmap scaled = BitmapUtils.createProportionalScaleBitmap(bmp,
+																						  parent.getWidth(),
+																						  parent.getHeight());
 
-                            void    startProgress() {
-                                runOnUiThread(new Runnable() {
-                                        public void run() {
-                                            setProgressBarIndeterminateVisibility(true);
-                                        }
-                                    });
-                            }
+								bmp.recycle();
 
-                            void    stopProgress() {
-                                runOnUiThread(new Runnable() {
-                                        public void run() {
-                                            setProgressBarIndeterminateVisibility(false);
-                                        }
-                                    });
-                            }
-                        });
-                }
-            }
+								return scaled;
+							}
 
-            return iv;
-        }
-    }
+							void    startProgress() {
+								runOnUiThread(new Runnable() {
+										public void run() {
+											setProgressBarIndeterminateVisibility(true);
+										}
+									});
+							}
 
-    void log() {
-        Log.d(TAG, "mFiles:\n");
+							void    stopProgress() {
+								runOnUiThread(new Runnable() {
+										public void run() {
+											setProgressBarIndeterminateVisibility(false);
+										}
+									});
+							}
+						});
+				}
+			}
 
-        for (File f : mFiles) {
-            Log.d(TAG, "  " + f + "\n");
-        }
-    }
+			return iv;
+		}
+	}
+
+	void log() {
+		Log.d(TAG, "mFiles:\n");
+
+		for (File f : mFiles) {
+			Log.d(TAG, "  " + f + "\n");
+		}
+	}
 }
