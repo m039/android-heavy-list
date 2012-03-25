@@ -1,15 +1,12 @@
 package com.m039.wf;
 
 import java.io.File;
-
 import java.io.FilenameFilter;
 
 import java.util.ArrayList;
-
-import java.util.regex.Matcher;
-
 import java.util.List;
 
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FileUtils
@@ -60,16 +57,6 @@ public class FileUtils
 		}.run();
 
 		return res;
-	}
-
-	static boolean			debug() {
-		// String test = "Hello world.jpg";
-		// Matcher m = p.matcher(test);
-
-		// if (m.find())
-		// 	return true;
-
-		return false;
 	}
 
 	static String			join(String [] strs, String separator) {

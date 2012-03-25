@@ -1,58 +1,42 @@
 package com.m039.wf;
 
-import android.os.Message;
+import android.widget.Button;
 
-import android.os.Handler;
-
-
-import android.os.Looper;
-
-import android.graphics.Color;
+import java.util.List;
 
 import java.io.File;
-
 import java.io.ByteArrayOutputStream;
-
 import java.io.FileInputStream;
-
 import java.io.BufferedInputStream;
-
 import java.io.InputStream;
-
 import java.io.BufferedInputStream;
-
 import java.io.InputStream;
-
-import android.widget.ArrayAdapter;
 
 import android.content.Context;
 
 import android.view.View;
-
-import android.widget.BaseAdapter;
-
-import android.widget.ListView;
-
 import android.view.ViewGroup;
 
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
+import android.widget.ListView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
+import android.graphics.Color;
 import android.graphics.BitmapFactory;
-
 import android.graphics.Bitmap;
 
-import android.widget.LinearLayout;
-
-import java.util.List;
+import android.app.Activity;
 
 import android.util.Log;
 
-import java.io.File;
-
-import android.widget.TextView;
-
-import android.app.Activity;
+import android.os.Message;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Bundle;
+
 
 public class DemoActivity extends Activity
 {
@@ -65,6 +49,12 @@ public class DemoActivity extends Activity
 	Handler			mImageHandler = null;
 	Handler			mBackgroundImageHandler = null;
 
+	static File ROOT = new File("/sdcard/ImageCache");	
+
+	static {
+		ROOT.mkdir();
+	}	
+	
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -76,10 +66,28 @@ public class DemoActivity extends Activity
 
 		mImages.setAdapter(new MAdapter(this, R.layout.element, mFiles));
 
+		initButtons();
+		
 		startImageThread();
 		startBackgroundImageThread();
 
 		log();
+	}
+
+	void initButtons() {
+		Button b = (Button) findViewById(R.id.clear_cache);
+		if (b != null)
+			b.setOnClickListener(new View.OnClickListener() {
+					public void onClick(View v) {
+						if (ROOT.exists()) {
+							FileUtils.delete(ROOT);
+						}
+
+						ROOT.mkdir();
+
+						((ArrayAdapter) mImages.getAdapter()).notifyDataSetChanged();
+					}
+				});
 	}
 
 	void startImageThread() {
@@ -120,21 +128,7 @@ public class DemoActivity extends Activity
 		}.start();
 	}
 
-	static File ROOT = new File("/sdcard/ImageCache");
-
-	static {
-		if (ROOT.exists()) {
-			FileUtils.delete(ROOT);
-		}
-
-		ROOT.mkdir();
-	}
-
 	class MAdapter extends ArrayAdapter<File> {
-		int		COUNT		= 4;
-		int		mIndex		= 0;
-		Thread	mThreads[]  = new Thread[COUNT];
-
 		MAdapter(Context c, int r, List<File> obj) {
 			super(c, r, obj);
 		}
@@ -176,6 +170,7 @@ public class DemoActivity extends Activity
 
 										if (pos != null && pos != position) {
 											image.setImageBitmap(mDefaultBitmap);
+											b.recycle();
 										} else {
 											image.setImageBitmap(b);
 										}
@@ -204,27 +199,32 @@ public class DemoActivity extends Activity
 								b = scaled;
 							}
 
-							mImageHandler.post(new Runnable() {
-									public void run() {
-										Integer pos = (Integer) image.getTag();
+							Integer pos = (Integer) image.getTag();
+							
+							if (pos != null && pos != position) {
+								if (!cache.exists()) {
+									BitmapUtils.saveBitmap(b, cache);
+								}
 
-										if (pos != null && pos != position)
-											return;
+								b.recycle();
+								
+							} else {
+								mImageHandler.post(new Runnable() {
+										public void run() {								
+											runOnUiThread(new Runnable() {
+													public void run() {
+														image.setImageBitmap(b);
+													}
+												});
+										}
+									});
 
-										runOnUiThread(new Runnable() {
-												public void run() {
-													image.setImageBitmap(b);
-												}
-											});
-									}
-								});
-
-							if (!cache.exists()) {
-								BitmapUtils.saveBitmap(b, cache);
+								if (!cache.exists()) {
+									BitmapUtils.saveBitmap(b, cache);
+								}								
 							}
 						}
 					});
-
 			}
 
 			return iv;

@@ -1,20 +1,15 @@
 package com.m039.wf;
 
 import android.graphics.Paint;
-
 import android.graphics.Canvas;
-
 import android.graphics.Color;
+import android.graphics.BitmapFactory;
+import android.graphics.Bitmap;
 
 import android.util.Log;
 
 import java.io.FileOutputStream;
-
 import java.io.File;
-
-import android.graphics.BitmapFactory;
-
-import android.graphics.Bitmap;
 
 public class BitmapUtils {
 	private static final String TAG = "m039";
