@@ -8,6 +8,11 @@
   /first/ - to get an image from folder and create cache
   
   /second/ - to set this image in the image-view
+
+** How to use
+   Just change in the DemoActivity the hardcoded path "/sdcard/Images"
+   to the path where large images are. (in my case, I was using desktop
+   wallpapers (1680x1050))
   
 * License
   This code is licensed under the terms of the Apache 2.0 license as
