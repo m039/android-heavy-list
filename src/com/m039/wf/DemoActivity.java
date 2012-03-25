@@ -51,12 +51,6 @@ public class DemoActivity extends Activity
 	Handler			mImageHandler = null;
 	Handler			mBackgroundImageHandler = null;
 
-	static File ROOT = new File("/sdcard/ImageCache");
-
-	static {
-		ROOT.mkdir();
-	}
-
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -98,11 +92,7 @@ public class DemoActivity extends Activity
 		if (b != null)
 			b.setOnClickListener(new View.OnClickListener() {
 					public void onClick(View v) {
-						if (ROOT.exists()) {
-							FileUtils.delete(ROOT);
-						}
-
-						ROOT.mkdir();
+						CacheUtils.clear();
 
 						((ArrayAdapter) mImages.getAdapter()).notifyDataSetChanged();
 					}
@@ -192,7 +182,7 @@ public class DemoActivity extends Activity
 				image.setTag(position);
 
 				final File bfile = mFiles.get(position);
-				final File cache = new File(ROOT, bfile.getName());
+				final File cache = CacheUtils.find(bfile.getName());
 
 				if (cache.exists()) {
 					mImageHandler.post(new Runnable() {
@@ -243,7 +233,7 @@ public class DemoActivity extends Activity
 
 								if (pos != null && pos != position) {
 									if (!cache.exists()) {
-										BitmapUtils.saveBitmap(b, cache);
+										CacheUtils.put(b, cache);
 									}
 
 									b.recycle();
@@ -260,7 +250,7 @@ public class DemoActivity extends Activity
 										});
 
 									if (!cache.exists()) {
-										BitmapUtils.saveBitmap(b, cache);
+										CacheUtils.put(b, cache);
 									}
 								}
 
