@@ -11,82 +11,82 @@ import java.util.regex.Pattern;
 
 public class FileUtils
 {
-	static List<File>		findFiles(String root, final String[] extensions) {
-		final File file = new File(root);
+    static List<File>       findFiles(String root, final String[] extensions) {
+        final File file = new File(root);
 
-		if (!file.isDirectory())
-			return null;
-		
-		final FilenameFilter extf, dirf;
+        if (!file.isDirectory())
+            return null;
+        
+        final FilenameFilter extf, dirf;
 
-		extf = new FilenameFilter() {
-				Pattern p;
+        extf = new FilenameFilter() {
+                Pattern p;
 
-				{
-					p = Pattern.compile("\\.(" + join(extensions, "|") + ")$");
-				}
+                {
+                    p = Pattern.compile("\\.(" + join(extensions, "|") + ")$");
+                }
 
-				public boolean accept (File dir, String filename) {
-					return p.matcher(filename).find();
-				}
-			};
+                public boolean accept (File dir, String filename) {
+                    return p.matcher(filename).find();
+                }
+            };
 
-		dirf = new FilenameFilter() {
-				public boolean accept (File dir, String filename) {
-					return new File(dir, filename).isDirectory();
-				}
-			};
+        dirf = new FilenameFilter() {
+                public boolean accept (File dir, String filename) {
+                    return new File(dir, filename).isDirectory();
+                }
+            };
 
 
-		final List<File> res = new ArrayList<File>();
+        final List<File> res = new ArrayList<File>();
 
-		new Runnable() {
-			public void run() {
-				add(file);
-			}
+        new Runnable() {
+            public void run() {
+                add(file);
+            }
 
-			void add(File root) {
-				for (File f : root.listFiles(extf)) {
-					res.add(f);
-				}
+            void add(File root) {
+                for (File f : root.listFiles(extf)) {
+                    res.add(f);
+                }
 
-				for (File d : root.listFiles(dirf)) {
-					add(d);
-				}
-			}			
-		}.run();
+                for (File d : root.listFiles(dirf)) {
+                    add(d);
+                }
+            }           
+        }.run();
 
-		return res;
-	}
+        return res;
+    }
 
-	static String			join(String [] strs, String separator) {
-		if (strs == null || strs.length <= 0)
-			return null;
+    static String           join(String [] strs, String separator) {
+        if (strs == null || strs.length <= 0)
+            return null;
 
-		if (strs.length == 1)
-			return strs[0];
+        if (strs.length == 1)
+            return strs[0];
 
-		StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
 
-		for (int i = 0; i < strs.length - 1; i++) {
-			sb.append(strs[i]);
-			sb.append(separator);
-		}
+        for (int i = 0; i < strs.length - 1; i++) {
+            sb.append(strs[i]);
+            sb.append(separator);
+        }
 
-		sb.append(strs[strs.length - 1]);
+        sb.append(strs[strs.length - 1]);
 
-		return sb.toString();
-	}
+        return sb.toString();
+    }
 
-	/**
-	 * Taken from SO
-	 */	  
-	static void delete(File fileOrDirectory) {
-		if (fileOrDirectory.isDirectory())
-			for (File child : fileOrDirectory.listFiles())
-				delete(child);
+    /**
+     * Taken from SO
+     */   
+    static void delete(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory())
+            for (File child : fileOrDirectory.listFiles())
+                delete(child);
 
-		fileOrDirectory.delete();
-	}
-	
+        fileOrDirectory.delete();
+    }
+    
 }
