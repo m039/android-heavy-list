@@ -13,11 +13,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CacheUtils {
-	static File ROOT = new File("/sdcard/ImageCache");
+    static File ROOT = new File("/sdcard/ImageCache");
 
-	static {
-		ROOT.mkdir();
-	}
+    static {
+        ROOT.mkdir();
+    }
 
 	static void		clear() {
 		if (ROOT.exists()) {

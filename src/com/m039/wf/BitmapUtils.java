@@ -12,37 +12,37 @@ import java.io.FileOutputStream;
 import java.io.File;
 
 public class BitmapUtils {
-	private static final String TAG = "m039";
+    private static final String TAG = "m039";
 
-	static Bitmap	createDebugImage(int width, int height) {
-		Bitmap b =  Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+    static Bitmap   createDebugImage(int width, int height) {
+        Bitmap b =  Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 
-		Paint p = new Paint();
+        Paint p = new Paint();
 
-		p.setColor(Color.WHITE);
-		
-		Canvas c = new Canvas(b);
-		c.drawColor(Color.BLACK);
+        p.setColor(Color.WHITE);
+        
+        Canvas c = new Canvas(b);
+        c.drawColor(Color.BLACK);
 
-		String text = "Loading";
-		
-		c.drawText(text, width / 2 - p.measureText(text) / 2 , height / 2, p);
+        String text = "Loading";
+        
+        c.drawText(text, width / 2 - p.measureText(text) / 2 , height / 2, p);
 
-		return b;
-	}
-	
-	static BitmapFactory.Options decodeBitmapBounds(File file) {
-		BitmapFactory.Options options = new BitmapFactory.Options();
+        return b;
+    }
+    
+    static BitmapFactory.Options decodeBitmapBounds(File file) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
 
-		options.inJustDecodeBounds = true;
-		
-		BitmapFactory.decodeFile(file.getAbsolutePath(), options);
-		
-		return options;
-	}
+        options.inJustDecodeBounds = true;
+        
+        BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+        
+        return options;
+    }
 
-	static Bitmap decodeBitmap(File file, int maxWidthHint, int maxHeightHint) {
-		BitmapFactory.Options options;
+    static Bitmap decodeBitmap(File file, int maxWidthHint, int maxHeightHint) {
+        BitmapFactory.Options options;
 
 		options = decodeBitmapBounds(file);
 
